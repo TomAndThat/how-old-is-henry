@@ -54,18 +54,16 @@ cron.schedule('0 8 * * *', () => {
     const today = new Date();
     
     let copy = `Were he alive today, King Henry VIII would be `;
-    
+
     if (today.getMonth() === henryVIIIBirthDate.getMonth() && today.getDate() === henryVIIIBirthDate.getDate()) {
       copy += `${since.years} years old exactly. Happy birthday Henry 🎉`;
     } else {
       let statement = `${since.years} year${since.years !== 1 ? 's' : ''}`;
     
-      if (since.months > 0) {
-        statement += ` ${since.months} month${since.months !== 1 ? 's' : ''}`;
-    
-        if (since.days > 0) {
-          statement += `, and`;
-        }
+      if (since.months > 0 && since.days > 0) {
+        statement += `, ${since.months} month${since.months !== 1 ? 's' : ''}`;
+      } else if (since.months > 0 || since.days > 0) {
+        statement += ` and ${since.months} month${since.months !== 1 ? 's' : ''}`;
       }
     
       if (since.days > 0) {
