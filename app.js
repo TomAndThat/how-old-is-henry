@@ -1,6 +1,8 @@
 require('dotenv').config()
 
 const Twit = require('twit')
+const cron = require('node-cron')
+
 const twitClient = new Twit({
   consumer_key: process.env.twitter_api_key,
   consumer_secret: process.env.twitter_api_secret,
@@ -44,33 +46,37 @@ function calculateTimeSinceHenryVIII() {
   return result;
 }
 
-setTimeout(() => {
-  const since = calculateTimeSinceHenryVIII();
-  const today = new Date();
-  
-  let copy = `Were he alive today, King Henry VIII would be `;
-  
-  if (today.getMonth() === henryVIIIBirthDate.getMonth() && today.getDate() === henryVIIIBirthDate.getDate()) {
-    copy += `${since.years} years old exactly. Happy birthday Henry 🎉`;
-  } else {
-    let statement = `${since.years} year${since.years !== 1 ? 's' : ''}`;
-  
-    if (since.months > 0) {
-      statement += ` ${since.months} month${since.months !== 1 ? 's' : ''}`;
-  
-      if (since.days > 0) {
-        statement += `, and`;
+console.log('Running...')
+
+cron.schedule('0 8 * * *', () => {
+  setTimeout(() => {
+    const since = calculateTimeSinceHenryVIII();
+    const today = new Date();
+    
+    let copy = `Were he alive today, King Henry VIII would be `;
+    
+    if (today.getMonth() === henryVIIIBirthDate.getMonth() && today.getDate() === henryVIIIBirthDate.getDate()) {
+      copy += `${since.years} years old exactly. Happy birthday Henry 🎉`;
+    } else {
+      let statement = `${since.years} year${since.years !== 1 ? 's' : ''}`;
+    
+      if (since.months > 0) {
+        statement += ` ${since.months} month${since.months !== 1 ? 's' : ''}`;
+    
+        if (since.days > 0) {
+          statement += `, and`;
+        }
       }
+    
+      if (since.days > 0) {
+        statement += ` ${since.days} day${since.days !== 1 ? 's' : ''}`;
+      }
+    
+      copy += `${statement} old.`;
     }
-  
-    if (since.days > 0) {
-      statement += ` ${since.days} day${since.days !== 1 ? 's' : ''}`;
-    }
-  
-    copy += `${statement} old.`;
-  }
-  
-  sendTweet(copy)
-}, Math.random() * (1000 * 60 * 60 * 13))
 
-
+    console.log(`Posting tweet: ${copy}`)
+    
+    sendTweet(copy)
+  }, Math.random() * (1000 * 60 * 60 * 13))
+})
