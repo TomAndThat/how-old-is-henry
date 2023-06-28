@@ -1,13 +1,13 @@
-require('dotenv').config()
-
-const Twit = require('twit')
-const cron = require('node-cron')
+require('dotenv').config();
+const Twit = require('twit');
+const cron = require('node-cron');
+const { differenceInYears, differenceInMonths, differenceInDays } = require('date-fns');
 
 const twitClient = new Twit({
   consumer_key: process.env.twitter_api_key,
   consumer_secret: process.env.twitter_api_secret,
   access_token: process.env.twitter_access_token,
-  access_token_secret: process.env.twitter_access_secret
+  access_token_secret: process.env.twitter_access_secret,
 });
 
 function sendTweet(tweetText) {
@@ -23,30 +23,24 @@ function sendTweet(tweetText) {
 const henryVIIIBirthDate = new Date(1491, 5, 28);
 
 function calculateTimeSinceHenryVIII() {
-  // Birth date of Henry VIII: June 28, 1491
-
   // Current date
   const currentDate = new Date();
 
-  // Calculate the time difference in milliseconds
-  const timeDifference = currentDate - henryVIIIBirthDate;
-
-  // Convert the time difference into years, months, and days
-  const years = Math.floor(timeDifference / (1000 * 60 * 60 * 24 * 365.25));
-  const months = Math.floor((timeDifference / (1000 * 60 * 60 * 24 * 30.4375)) % 12);
-  const days = Math.floor((timeDifference / (1000 * 60 * 60 * 24)) % 30.4375);
+  const years = differenceInYears(currentDate, henryVIIIBirthDate);
+  const months = differenceInMonths(currentDate, henryVIIIBirthDate) % 12;
+  const days = differenceInDays(currentDate, henryVIIIBirthDate) % 30;
 
   // Create and return the result object
   const result = {
     years: years,
     months: months,
-    days: days
+    days: days,
   };
 
   return result;
 }
 
-console.log('Running...')
+console.log('Running...');
 
 cron.schedule('0 8 * * *', () => {
   setTimeout(() => {
@@ -65,15 +59,14 @@ cron.schedule('0 8 * * *', () => {
 
       if (since.months > 0 && since.days > 0)
         statement += ' and';
-  
+
       if (since.days > 0)
         statement += ` ${since.days} day${since.days !== 1 ? 's' : ''}`;
-  
+
       copy += `${statement} old.`;
     }
 
-    console.log(`Posting tweet: ${copy}`)
-    
-    sendTweet(copy)
-  }, Math.random() * (1000 * 60 * 60 * 13))
-})
+    console.log(`Posting tweet: ${copy}`);
+    sendTweet(copy);
+  }, Math.random() * (1000 * 60 * 60 * 13));
+});
