@@ -1,7 +1,6 @@
 require('dotenv').config();
 const Twit = require('twit');
 const cron = require('node-cron');
-const { differenceInYears, differenceInMonths, differenceInDays } = require('date-fns');
 
 const twitClient = new Twit({
   consumer_key: process.env.twitter_api_key,
@@ -26,9 +25,37 @@ function calculateTimeSinceHenryVIII() {
   // Current date
   const currentDate = new Date();
 
-  const years = differenceInYears(currentDate, henryVIIIBirthDate);
-  const months = differenceInMonths(currentDate, henryVIIIBirthDate) % 12;
-  const days = differenceInDays(currentDate, henryVIIIBirthDate) % 30;
+  let years = currentDate.getFullYear() - henryVIIIBirthDate.getFullYear()
+  
+  if(currentDate.getMonth() < 5 || currentDate.getMonth() === 5 && currentDate.getDate() < 28)
+    years = currentDate.getFullYear() - henryVIIIBirthDate.getFullYear() - 1
+
+  let months
+
+  if(currentDate.getMonth() === 5 && currentDate.getDate() > 28)
+    months = 0
+  else if(currentDate.getMonth() > 5)
+    months = currentDate.getMonth() + 1 - 6
+  else
+    months = currentDate.getMonth() + 1 + 6
+
+  if(currentDate.getDate() < 28)
+    months --
+
+
+  let days = currentDate.getDate()
+
+  const plusTwo = [9, 4, 6, 11]
+  const plusThree = [0, 1, 3, 5, 7, 8, 10]
+
+  if(currentDate.getDate() < 28) {
+    if(plusTwo.indexOf(currentDate.getMonth()) > -1)
+      days = currentDate.getDate() + 2
+    else if(plusThree.indexOf(currentDate.getMonth()) > -1)
+      days = currentDate.getDate() + 3
+  } else {
+    days -= 28
+  }
 
   // Create and return the result object
   const result = {
@@ -36,6 +63,9 @@ function calculateTimeSinceHenryVIII() {
     months: months,
     days: days,
   };
+
+  console.log(`Result`)
+  console.log(result)
 
   return result;
 }
@@ -47,21 +77,26 @@ cron.schedule('0 8 * * *', () => {
     const since = calculateTimeSinceHenryVIII();
     const today = new Date();
 
-    let copy = `Were he alive today, King Henry VIII would be `;
-
-    if (today.getMonth() === henryVIIIBirthDate.getMonth() && today.getDate() === henryVIIIBirthDate.getDate()) {
-      copy += `${since.years} years old exactly. Happy birthday Henry 🎉`;
+    let copy = `Were he alive today, King Henry VIII would be ${since.years} years`;
+  
+    if (today.getMonth() === 5 && today.getDate() === 28) {
+      copy += ` old exactly. Happy birthday Henry 🎉`;
     } else {
-      let statement = `${since.years} year${since.years !== 1 ? 's' : ''}`;
+      let statement = ''
 
-      if (since.months > 0 || since.days > 0)
-        statement += `, ${since.months} month${since.months !== 1 ? 's' : ''}`;
+      if(since.months === 1 && since.days === 0)
+        statement += ` and 1 month`
+      else if(since.months > 1 && since.days === 0)
+        statement += ` and ${since.months} months`
+      else if(since.months === 1)
+        statement += `, 1 month`
+      else if(since.months > 1)
+        statement += `, ${since.months} months`
 
-      if (since.months > 0 && since.days > 0)
-        statement += ' and';
-
-      if (since.days > 0)
-        statement += ` ${since.days} day${since.days !== 1 ? 's' : ''}`;
+      if(since.days === 1)
+        statement += ` and 1 day`
+      else if(since.days > 1)
+        statement += ` and ${since.days} days`
 
       copy += `${statement} old.`;
     }
